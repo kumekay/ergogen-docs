@@ -89,7 +89,7 @@ In a full, object anchor declaration, the following fields can be used:
   - a `parts` array containing the sub-anchors we want to aggregate, and 
   - a `method` string to indicate *how* we want to aggregate them.
 
-  The only method implemented so far is `average`, which is the default anyway, so the `method` can be omitted for now.
+  Two methods are implemented: `average` (the default, which can therefore be omitted) averages the `x`/`y` coordinates *and* the `r` rotation of all parts, while `intersect` projects a line through each part along its rotated Y axis and returns the point where those lines cross (erroring out if they're parallel).
 
   :::note
   Averaging applies to both the `x`/`y` coordinates *and* the `r` rotation.
@@ -310,13 +310,13 @@ anchor_1:
 
 # 2, default mirrored case
 anchor_2:
-  ref: left_mirror
+  ref: mirror_left
   shift: [1, 0]
   rotate: 45
 
 # 3, mirrored case with resistance
 anchor_3:
-  ref: left_mirror
+  ref: mirror_left
   shift: [1, 0]
   rotate: 45
   resist: true

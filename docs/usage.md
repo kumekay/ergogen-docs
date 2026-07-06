@@ -18,7 +18,7 @@ The workflow is the same in both: paste (or type) your config into the editor on
 ### For end users
 
 :::info
-Requires Node.js 18+ (and the bundled npm). The current dependencies - most notably `mathjs@^15` and `fs-extra@^11` - no longer support the older Node 14 line.
+Requires Node.js 18+ (and the bundled npm). The current dependencies - most notably `mathjs@^15` - no longer support the older Node 14 line.
 :::
 
 If command line is more your thing, you can install the latest ergogen release by issuing:
@@ -46,7 +46,7 @@ where `<config_file>` is a YAML/JSON/JS config, or a `.zip`/`.ekb` bundle (or a 
 | Option | Alias | Default | Description |
 | --- | --- | --- | --- |
 | `--output` | `-o` | `./output` | Output folder to write results into. |
-| `--debug` | `-d` | `false` | Debug mode - also emits the raw/canonical source, points data, demo visualization, intermediate `.yaml` models, and non-underscore-prefixed (`_`) items. |
+| `--debug` | `-d` | `false` | Debug mode - also emits the raw/canonical source, points data, demo visualization, intermediate `.yaml` models, and the underscore-prefixed (`_`) "private" outlines/cases/pcbs that are otherwise skipped. |
 | `--clean` | | `false` | Empty the output folder before writing. |
 | `--svg` | `--generate-svg` | `false` | Also generate SVG renders of the outlines (DXF is always produced). |
 

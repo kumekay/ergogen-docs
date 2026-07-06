@@ -269,7 +269,7 @@ As you saw in the previous section, the `body` function of a footprint gets a `p
 
 - `isxy`, `iaxy`, `esxy`, `eaxy`: these functions help with positioning sub-elements inside and outside the main `module`/`footprint` context. See the next section for details.
 
-- `local_net`: this function helps define nets that are local to each footprint instance - implemented as nets whose names are prefixed by the `ref`erence of the footprint they're local to. For example, the call `local_net('trace')` within the a diode footprint with designator `D` leads to (a properly indexed) `D1_trace` net object in the first instance, `D2_trace` in the second, etc. (so that you don't have to worry about ambiguous references when using a footprint multiple times).
+- `local_net`: this function helps define nets that are local to each footprint instance - implemented as nets whose names are prefixed by the `ref`erence of the footprint they're local to. For example, the call `local_net('trace')` within a diode footprint with designator `D` leads to (a properly indexed) `D1_trace` net object in the first instance, `D2_trace` in the second, etc. (so that you don't have to worry about ambiguous references when using a footprint multiple times).
 
 ### Footprint Coordinates
 
