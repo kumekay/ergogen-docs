@@ -6,14 +6,19 @@ sidebar_position: 10
 
 ## Web
 
-TODO
+The quickest way to get going is the browser-based UI - no install required. There are two deployments:
+
+- [ergogen.xyz](https://ergogen.xyz) - the official, stable web UI.
+- [ergogen.ceoloide.com](https://ergogen.ceoloide.com) - an unofficial, nightly build that tracks the latest development features (and is likely to become official).
+
+The workflow is the same in both: paste (or type) your config into the editor on the left, and Ergogen re-processes it live. You can inspect the generated **Points**, **Outlines**, **Cases**, and **PCBs** in the preview panes, then download the individual outputs (DXF/SVG outlines, JSCAD cases, `.kicad_pcb` files) or grab everything as a zip. It's the ideal place to prototype, tinker with someone else's config, and see changes instantly.
 
 ## CLI
 
 ### For end users
 
 :::info
-Requires node v14.4.0+ with npm v6.14.5+ to be installed.
+Requires Node.js 18+ (and the bundled npm). The current dependencies - most notably `mathjs@^15` and `fs-extra@^11` - no longer support the older Node 14 line.
 :::
 
 If command line is more your thing, you can install the latest ergogen release by issuing:
@@ -28,7 +33,29 @@ After this, you will be able to use the `ergogen` command - for example, by spec
 ergogen input.yaml -o output_folder
 ```
 
-For the full set command line options available, see `ergogen --help`.
+#### Command line options
+
+The general shape of an invocation is:
+
+```shell
+ergogen <config_file> [options]
+```
+
+where `<config_file>` is a YAML/JSON/JS config, or a `.zip`/`.ekb` bundle (or a folder) containing a `config.*` plus custom footprints/templates. The available options are:
+
+| Option | Alias | Default | Description |
+| --- | --- | --- | --- |
+| `--output` | `-o` | `./output` | Output folder to write results into. |
+| `--debug` | `-d` | `false` | Debug mode - also emits the raw/canonical source, points data, demo visualization, intermediate `.yaml` models, and non-underscore-prefixed (`_`) items. |
+| `--clean` | | `false` | Empty the output folder before writing. |
+| `--svg` | `--generate-svg` | `false` | Also generate SVG renders of the outlines (DXF is always produced). |
+
+Since the CLI is built on [yargs](https://yargs.js.org/), `--help` and `--version` are available for free:
+
+```shell
+ergogen --help
+ergogen --version
+```
 
 ### For development
 

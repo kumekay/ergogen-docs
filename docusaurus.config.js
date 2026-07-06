@@ -1,18 +1,27 @@
-const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+// @ts-check
+const { themes } = require('prism-react-renderer');
+const lightCodeTheme = themes.github;
+const darkCodeTheme = themes.dracula;
 
 // With JSDoc @type annotations, IDEs can provide config autocompletion
-/** @type {import('@docusaurus/types').DocusaurusConfig} */
-(module.exports = {
+/** @type {import('@docusaurus/types').Config} */
+const config = {
   title: 'Ergogen docs',
   tagline: 'Ergonomic keyboard layout generator',
-  url: process.env.SITE_URL ?? 'https://ergogen.github.io',
-  baseUrl: process.env.BASE_URL ?? '/',
+  // Deployed via GitHub Pages from the kumekay/ergogen-docs fork.
+  // Override with SITE_URL / BASE_URL env vars for other deployments.
+  url: process.env.SITE_URL ?? 'https://kumekay.github.io',
+  baseUrl: process.env.BASE_URL ?? '/ergogen-docs/',
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
   favicon: 'img/ergogen.png',
-  organizationName: 'ergogen',
+  organizationName: 'kumekay',
   projectName: 'ergogen-docs',
+
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
+  },
 
   presets: [
     [
@@ -22,8 +31,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
           routeBasePath: '/',
-          // Please change this to your repo.
-          editUrl: 'https://github.com/ergogen/ergogen-docs/edit/main/',
+          editUrl: 'https://github.com/kumekay/ergogen-docs/edit/main/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -36,7 +44,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       colorMode: {
-        defaultMode: 'dark'
+        defaultMode: 'dark',
       },
       navbar: {
         title: 'Ergogen docs',
@@ -45,6 +53,11 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
           src: 'img/ergogen.png',
         },
         items: [
+          {
+            href: 'https://github.com/kumekay/ergogen',
+            label: 'GitHub',
+            position: 'right',
+          },
         ],
       },
       footer: {
@@ -55,7 +68,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
             items: [
               {
                 label: 'Documentation',
-                to: process.env.BASE_URL ?? '/',
+                to: '/',
               },
             ],
           },
@@ -64,7 +77,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
             items: [
               {
                 label: 'Absolem blogpost',
-                to: 'https://zealot.hu/absolem/',
+                href: 'https://zealot.hu/absolem/',
               },
             ],
           },
@@ -73,17 +86,19 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
             items: [
               {
                 label: 'Discord',
-                to: 'http://discord.ergogen.xyz',
+                href: 'http://discord.ergogen.xyz',
               },
             ],
-          }
+          },
         ],
         copyright: `Copyright © ${new Date().getFullYear()} Ergogen. Built with Docusaurus.`,
       },
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
-        defaultLanguage: 'yaml'
+        defaultLanguage: 'yaml',
       },
     }),
-});
+};
+
+module.exports = config;

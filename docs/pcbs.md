@@ -2,6 +2,9 @@
 sidebar_position: 8
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # PCBs
 
 ## Overview
@@ -9,12 +12,6 @@ sidebar_position: 8
 Everything should be ready for a handwire at this point, but if you'd like the design to be more accessible to, and easily replicable by others, you might want to design a PCB as well.
 To help you get started, Ergogen can automatically position the necessary footprints and an edge cut (or, other markings) so that all you need to do manually in KiCAD is the routing.
 (Or, not even that, if you decide to use an auto-router.)
-
-<br />
-
-
-
-
 
 ## Usage
 
@@ -35,7 +32,7 @@ pcbs:
         params: <param object for the footprint>
       ...
     references: <boolean, whether to show component references on the pcb> # default = false
-    template: <string> # name of the PCB template to use, default = kicad5
+    template: kicad5 | kicad8 # name of the PCB template to use, default = kicad5
     params: <anything, pcb-level custom parameters passed to the template>
   ...
 ```
@@ -51,7 +48,31 @@ Additionally, the section can also be used to send arbitrary marks to other silk
 
 Then comes the meat of the pcb declaration: placing footprints.
 The `where`/`asym`/`adjust` keys do the exact same thing they did for [Outlines](./outlines.md#common-attributes), only now the points they produce will be used to place the footprint selected by the `what` key.
-For a list of built-in footprints available, please check the contents of [this folder](https://github.com/ergogen/ergogen/tree/master/src/footprints) &ndash; the basename of each file here is what we can specify under the `what` key.
+The value of `what` is the basename of one of the [built-in footprint files](https://github.com/ergogen/ergogen/tree/master/src/footprints) (or a custom one you supply via a [bundle](./formats.md#bundles)).
+The footprints Ergogen ships with are:
+
+| `what` | Footprint |
+| --- | --- |
+| `alps` | Alps (and Matias) keyswitch. |
+| `button` | E-Switch TL3342 low-profile SMD tactile button. |
+| `choc` | Kailh Choc PG1350 low-profile keyswitch (optional hotswap / reversible / keycap outline). |
+| `chocmini` | Kailh Choc Mini PG1232 keyswitch (optional reversible / keycap outline). |
+| `diode` | Combo diode with both SMD and THT pads, for matrix wiring. |
+| `jstph` | JST PH 2-pin side-entry connector, typically for a battery. |
+| `jumper` | Two-pad solder jumper. |
+| `mounthole` | Mounting hole ringed by stitching pads. |
+| `mx` | Cherry MX-style keyswitch (optional hotswap / reversible / keycap outline). |
+| `oled` | 4-pin I2C OLED display header. |
+| `omron` | Omron B3F-4055 tactile switch. |
+| `pad` | General-purpose copper pad (front and/or back, with optional label text). |
+| `promicro` | Arduino Pro Micro (ATmega32U4) controller. |
+| `rgb` | WS2812B addressable RGB LED. |
+| `rotary` | EC11 rotary encoder with push switch. |
+| `scrollwheel` | Panasonic EVQWGD001 horizontal scroll-wheel encoder. |
+| `slider` | SPDT slide switch, e.g. a power toggle. |
+| `trrs` | PJ-320A TRRS jack, for split-keyboard interconnects. |
+| `via` | Single via tied to a net. |
+
 As for what parameters the chosen footprint can take, please refer to the footprint file's top comment (or the `params` section within the module exports).
 
 Footprint parameters can be simple values like booleans/numbers/strings, aggregate values like arrays/objects, or custom Ergogen-specific values like "net" or "anchor".
@@ -95,55 +116,93 @@ The most common solution is matrix wiring, which you can learn about [**here**](
 Additionally, [**here**](https://wiki.ai03.com/books/pcb-design/page/pcb-guide-part-1---preparations)'s a very good introductory KiCAD tutorial covering most bases.
 :::
 
-<br />
-
-
-
-
-
-
-
 ## Examples
 
-<details><summary>Simple Keys + MCU</summary>
-<p>
+<details>
+<summary>Simple Keys + MCU</summary>
+
+A minimal but complete PCB: a 3&times;2 matrix of `mx` switches, a `diode` next to each key, a `promicro` controller off to the side, and an `edge` cut referencing a rounded board outline.
+The switches and diodes are wired into a proper matrix through templating &mdash; each key's column (`{{col.name}}`) and row (`{{row}}`) attributes become the net names, joined by a per-key `{{colrow}}` node between switch and diode.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+units:
+  kx: 19
+  ky: 19
+points:
+  zones:
+    matrix:
+      key:
+        padding: ky
+        spread: kx
+      columns:
+        col1:
+        col2:
+        col3:
+      rows:
+        row1:
+        row2:
+    mcu:
+      anchor:
+        ref: matrix_col3_row2
+        shift: [kx, 0]
+      columns:
+        only:
+      rows:
+        only:
+outlines:
+  board:
+    - what: rectangle
+      where: true
+      size: [kx, ky]
+      bound: true
+      corner: 3
+pcbs:
+  board:
+    outlines:
+      edge:
+        outline: board
+    footprints:
+      switches:
+        where: /^matrix/
+        what: mx
+        params:
+          from: "{{col.name}}"
+          to: "{{colrow}}"
+      diodes:
+        where: /^matrix/
+        what: diode
+        adjust:
+          shift: [0, -5]
+        params:
+          from: "{{colrow}}"
+          to: "{{row}}"
+      controller:
+        where:
+          ref: mcu_only_only
+        what: promicro
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![The PCB edge cut outline](./assets/pcb_keys.board.svg)
+
+The `edge` cut outline of the generated PCB (the footprints themselves live in the `.kicad_pcb`, which can't be shown here).
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
-
-<br />
-
-
-
-
-
-
-
-
-
 
 ## Footprints
 
 Ergogen provides a set of default, built-in footprints for the most common use-cases (again, found and documented in [this folder](https://github.com/ergogen/ergogen/tree/master/src/footprints)), designers might want to (or need to) extend this set with custom footprints.
 And while they don't have to modify the Ergogen codebase to achieve this (see [bundles](./formats.md#bundles)), they do need to provide an "Ergogen-ized" version of the raw KiCAD footprint file.
-<!-- Note auto-parse option here once it's available -->
 
 Each Ergogen-ized footprint is a `.js` file that looks something like the following:
 
@@ -195,16 +254,13 @@ Boolean, string, number, array and object parameters can be used intuitively (si
 If you're creating a custom Ergogen footprint, your best bet is looking at how an existing footprint incorporates the actual KiCAD footprint text and wraps it with its own minimal "infrastructure". From there, you can just A) make the positioning parametric, B) decouple a few parameters you want the users to be able to specify in their configs, and C) swap out the occurrences of those values in the footprint text for references to the corresponding parameter values.
 :::
 
-
-
-
 ### Footprint API
 
 As you saw in the previous section, the `body` function of a footprint gets a `parsed_params` object from which it can use the pre-parsed, footprint-specific, and potentially overridden parameter values declared in its `params` section, plus a few other values/functions Ergogen uniformly provides for all footprints:
 
 - `ref`: The computed reference name of the component. Defined as the designator of the footprint plus a running index suffix. (So, for example, `D4` for the fourth diode, assuming `D` is the designator for diodes.)
 
-- `ref_hide`: a boolean flag indicating whether to show the above `ref` on the silkscreen of the PCB (derived from `pcbs.<pcb_name>.references`)
+- `ref_hide`: a string to drop straight into the `ref`'s KiCAD text clause that controls whether it shows on the silkscreen (derived from `pcbs.<pcb_name>.references`). It's the empty string when references are shown, or the literal `hide` when they should be hidden.
 
 - `x`/`y`/`r`/`rot`/`xy`/`at`: values to help position the footprint where it needs to go.
   - `x`/`y`/`r` contain plain numbers with the appropriate values for the current point (`rot` being a deprecated synonym for `r`),
@@ -215,11 +271,7 @@ As you saw in the previous section, the `body` function of a footprint gets a `p
 
 - `local_net`: this function helps define nets that are local to each footprint instance - implemented as nets whose names are prefixed by the `ref`erence of the footprint they're local to. For example, the call `local_net('trace')` within the a diode footprint with designator `D` leads to (a properly indexed) `D1_trace` net object in the first instance, `D2_trace` in the second, etc. (so that you don't have to worry about ambiguous references when using a footprint multiple times).
 
-
-
-
 ### Footprint Coordinates
-
 
 Footprint coordinate behavior has to be divided along the internal/external, and the symmetric/asymmetric axes. In this context, internal means coordinates within a KiCAD `module`/`footprint`, which are already going to be affected by the module's overall position and rotation, while external means coordinates outside of modules (for example, traces, segments, zones that accompany the main module in the same shared footprint file). Symmetric means that we want a clockwise rotation or a right-pointing trace to be counter-clockwise and left-pointing, respectively, when applied to a mirrored point, while asymmetric means that we don't want this special treatment. This leads to a nice 2x2 matrix:
 
@@ -241,16 +293,16 @@ All four of these are used in the form `[i/e][s/a]xy(x, y)` - so, a function cal
 - `x`/`y` for the properly calculated coordinate values for the given use-case, and
 - `str` containing both `x` and `y` in string form, similarly to how the footprint's global position was supplied via `parsed_params.xy`, defined as `${x} ${y}` (and this is also the default string representation of the whole object, if printed directly).
 
-<br />
-
-
-
-
-
-
 ## Templates
 
-Besides footprints, Ergogen also provides a set of default, built-in templates for different KiCAD versions (found in [this folder](https://github.com/ergogen/ergogen/tree/master/src/templates)). But, again, designers might want a custom template. And, again, they don't have to modify the Ergogen codebase to achieve this (see [bundles](./formats.md#bundles)), only supply a `.js` file that looks something like the following:
+Besides footprints, Ergogen also provides a set of default, built-in templates for different KiCAD versions (found in [this folder](https://github.com/ergogen/ergogen/tree/master/src/templates)). Two are available, selected via `pcbs.<pcb_name>.template`:
+
+- `kicad5` (the **default**): emits the legacy KiCAD 5 file format (`version 20171130`, `host pcbnew 5.1.6`). Outlines are drawn with the old `gr_line`/`gr_arc`/`gr_circle` syntax (an explicit `(width ...)` and, for lines, `(angle 90)`), and the PCB carries a `net_class` block. Kept as the default for backwards compatibility.
+- `kicad8`: emits the modern KiCAD 6/7/8 format (`version 20240108`, `generator "ergogen"`). Outlines use the newer `(stroke (width ...) (type default))` styling, arcs are written as start/mid/end triples, and a build date is stamped into the title block. Pick this one if you're opening the result in a current KiCAD.
+
+The generated PCB is functionally the same either way &ndash; only the file format encoding differs, so choose the template that matches your KiCAD version.
+
+But, again, designers might want a custom template. And, again, they don't have to modify the Ergogen codebase to achieve this (see [bundles](./formats.md#bundles)), only supply a `.js` file that looks something like the following:
 
 ```js
 module.exports = {
