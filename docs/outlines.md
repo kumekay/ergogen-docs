@@ -9,23 +9,31 @@ import TabItem from '@theme/TabItem';
 
 ## Overview
 
-TODO points -> outlines illustration
-
 Once the raw points are available, we often want to turn them into solid, continuous outlines.
 We do this by selecting an arbitrary subset of points and placing shapes there to form a part, and then use boolean operations (i.e., addition, subtraction, or intersection) to combine parts into a final outline to export.
+
+The points on their own are just centers with a rotation, but with a little binding they can grow into a single, contiguous plate:
+
+<Tabs>
+<TabItem value="points" label="Points" default>
+<div style={{textAlign: 'center'}}>
+
+![The bare points](./assets/outlines_bind_auto.demo.svg)
+
+</div>
+</TabItem>
+<TabItem value="outline" label="Outline">
+<div style={{textAlign: 'center'}}>
+
+![The resulting bound outline](./assets/outlines_bind_auto.plate.svg)
+
+</div>
+</TabItem>
+</Tabs>
+
 We'll get back to how an individual part looks soon &ndash; but first, we need to get familiar with binding and filtering.
 
 <br />
-
-
-
-
-
-
-
-
-
-
 
 ## Binding
 
@@ -62,74 +70,89 @@ And if autobinding fails for a more complex shape, we can always fall back to ex
 
 ### Examples
 
-<details><summary>Explicit bind</summary>
-<p>
+<details>
+<summary>Explicit bind</summary>
 
-explicit bind and how it's smaller than just placing larger tiles
+Here each `15` mm key rectangle gets an explicit `bind: 4`, so the shapes grow just enough to touch their neighbours and fuse into one contiguous plate (note the `bound: true` on the part, which actually activates the binding).
+Because we only grow by the amount we need, the final margin stays tight &ndash; much smaller than we'd get by simply placing oversized tiles.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+points:
+  zones:
+    matrix:
+      columns:
+        a:
+        b:
+        c:
+      rows:
+        home:
+        top:
+      key:
+        bind: 4
+outlines:
+  plate:
+    - what: rectangle
+      where: true
+      size: 15
+      bound: true
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Explicit bind plate](./assets/outlines_bind_explicit.plate.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
+<details>
+<summary>Autobind</summary>
 
-
-
-
-
-<details><summary>Autobind</summary>
-<p>
-
-autobind explanation/illustration
+The exact same layout, but without any `bind` declaration at all.
+With `bound: true`, Ergogen falls back to `autobind` (default `10`), figures out the neighbouring directions on its own, and still produces a contiguous plate &ndash; no manual binding required.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+points:
+  zones:
+    matrix:
+      columns:
+        a:
+        b:
+        c:
+      rows:
+        home:
+        top:
+outlines:
+  plate:
+    - what: rectangle
+      where: true
+      size: 15
+      bound: true
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Autobind plate](./assets/outlines_bind_auto.plate.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
 <br />
-
-
-
-
-
-
-
-
-
-
-
-
 
 ## Filtering
 
@@ -183,8 +206,6 @@ Finally, if it would be easier to select what we **don't** want instead of what 
 So while saying `matrix_pinky_home` select only that one key, `-matrix_pinky_home` selects everything *except* that key.
 This also works with both tags and regexes, of course, so `-alpha` selects everything that isn't tagged with `alpha` (assuming the existence of an alpha tag), and `-/pinky/` selects keys where the "pinky" substring *isn't* found anywhere within the name or any of its tags.
 
-
-
 ### Advanced usage
 
 Every single filter actually consists of three components:
@@ -207,140 +228,186 @@ So, for example, writing `[something, other]` would mean that all points are ret
 
 ### Examples
 
-<details><summary>Tags</summary>
-<p>
+The examples below all share this small layout: a `matrix` zone (whose keys are tagged `alpha`) and a two-key `thumb` zone (tagged `thumb`). Each example simply places a `15` mm rectangle at whichever points its `where` filter selects, so the resulting outline *is* the selected subset.
+
+```yaml
+points:
+  zones:
+    matrix:
+      columns:
+        pinky:
+        ring:
+        middle:
+      rows:
+        home:
+        top:
+      key:
+        tags: [alpha]
+    thumb:
+      anchor:
+        ref: matrix_pinky_home
+        shift: [0, -20]
+      columns:
+        inner:
+        outer:
+      key:
+        tags: [thumb]
+```
+
+<details>
+<summary>Tags</summary>
+
+`where: thumb` matches every key carrying the `thumb` tag &ndash; here, the two thumb keys.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+outlines:
+  selection:
+    - what: rectangle
+      where: thumb
+      size: 15
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Tag filter selection](./assets/outlines_filter_tags.selection.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
+<details>
+<summary>Regexes</summary>
 
-
-
-<details><summary>Regexes</summary>
-<p>
+`where: /^matrix_pinky/` matches every key whose name starts with `matrix_pinky` &ndash; i.e. the whole pinky column.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+outlines:
+  selection:
+    - what: rectangle
+      where: /^matrix_pinky/
+      size: 15
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Regex filter selection](./assets/outlines_filter_regex.selection.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
+<details>
+<summary>Negation</summary>
 
-
-
-<details><summary>Negation</summary>
-<p>
+Prefixing with `-` inverts the match: `where: -thumb` selects everything *except* the `thumb`-tagged keys, i.e. the whole matrix.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+outlines:
+  selection:
+    - what: rectangle
+      where: -thumb
+      size: 15
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Negation filter selection](./assets/outlines_filter_negation.selection.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
+<details>
+<summary>Full filters</summary>
 
-
-
-<details><summary>Full filters</summary>
-<p>
+Here the layout is tweaked so each key carries a custom `home_row` key-level attribute (set per row). The full-form filter `meta.home_row ~ true` checks against *that* attribute instead of the default name/tags, selecting just the home row.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+points:
+  zones:
+    matrix:
+      columns:
+        pinky:
+        ring:
+        middle:
+      rows:
+        home:
+          home_row: true
+        top:
+          home_row: false
+outlines:
+  selection:
+    - what: rectangle
+      where: meta.home_row ~ true
+      size: 15
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Full filter selection](./assets/outlines_filter_full.selection.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
+<details>
+<summary>Combination</summary>
 
-
-
-<details><summary>Combination</summary>
-<p>
+Nesting arrays combines simple filters. The double-nested `[[alpha, /_top$/]]` is an **AND**: it selects keys that are *both* tagged `alpha` *and* whose name ends in `_top` &ndash; the matrix top row only (thumbs are excluded, since they aren't `alpha`).
+A single-nested `[alpha, thumb]` would instead be an **OR**.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+outlines:
+  selection:
+    - what: rectangle
+      where: [[alpha, /_top$/]]
+      size: 15
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Combination filter selection](./assets/outlines_filter_combination.selection.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
 <br />
-
-
-
-
-
-
 
 ## Parts
 
@@ -384,8 +451,6 @@ Operations are performed in order, and the resulting shape is exported as an out
 Additionally, it is going to be available for further outline declarations to use (through the `outline` type, see below) under the name specified (`<outline_name>`, in this case).
 
 Now let's see how those `<part>`s are made.
-
-
 
 ### Common attributes
 
@@ -451,10 +516,6 @@ If `true`, the corresponding binding rectangles are added to each relevant side 
   Once a corner is filleted, it won't be filleted again, so it's safe to apply a `fillet` with increasingly smaller radii to catch every sharp corner if desired.
   :::
 
-
-
-
-
 ### Shapes
 
 Shapes can have their own, shape-specific attributes on top of the ones already discussed above.
@@ -473,7 +534,7 @@ With this, let's see a list of what actual shapes we can place, what extra attri
   - **`size`**: Either a number or an array in the form `[num_x, num_y]`, representing the width/height of the rectangle(s) to place. If it's a single number `num`, it's interpreted as `[num, num]` (i.e., a square). Mandatory. Introduces `sx` and `sy` as units for width and height, respectively.
 
   - **`bevel`**: Optional beveling for the rectangles, default is `0`.
-  
+
   - **`corner`**: Optional corner radius for the rectangles, default is `0`.
 
     :::caution
@@ -490,12 +551,16 @@ With this, let's see a list of what actual shapes we can place, what extra attri
 
   - **`radius`**: The radius of the circle to place. Mandatory. Introduces `r` as a unit.
 
-- **`poly`**: A custom polygon.
+- **`polygon`**: A custom polygon.
 
   - **`points`**: Mandatory array of anchors, representing the points of the polygon.
     Each item of the array is a regular anchor &ndash; the only difference is that if its `ref` is unspecified, the polygon's previous point will be assumed (to simulate a continuous chain).
     For the first point, `[0, 0, 0°]` is assumed to be the starting point by default (as the polygon will be placed using a `[0, 0]` origin anyway).
-  
+
+    :::note
+    The shape name is `polygon` &ndash; the `poly` shorthand is *not* accepted by the `what` field.
+    :::
+
 - **`outline`**: Allows reuse of an already existing outline as a primitive for further outlines.
 
   - **`name`**: The name to identify the outline to place. Mandatory.
@@ -507,14 +572,121 @@ With this, let's see a list of what actual shapes we can place, what extra attri
     Both options are available for flexibility, feel free to use either (or both in conjunction, if appropriate).
     :::
 
+- **`path`**: A free-form shape built from a sequence of connected `segments`, so it can mix straight lines with curves.
 
+  - **`segments`**: Mandatory array of segments. Each segment is drawn starting from where the previous one ended, and once all segments are laid down Ergogen automatically closes the shape with a straight line from the last point back to the first. The segments must therefore form a single, closed loop &ndash; otherwise Ergogen errors out with *"The provided path configuration doesn't generate a closed shape."* Each segment has:
 
+    - **`type`**: one of `line`, `arc`, `s_curve`, or `bezier`.
 
+    - **`points`**: an array of [anchors](./points.md#anchors), exactly like `polygon`'s points (ref-less anchors chain from the previous point). How many points a segment needs depends on its `type` &ndash; and, since every segment after the first inherits its starting point from the previous segment, later segments need one point fewer:
 
+      | `type` | first segment | later segments |
+      | --- | --- | --- |
+      | `line` | 2 or more | 1 or more |
+      | `arc` | exactly 3 (start, mid, end) | exactly 2 (mid, end) |
+      | `s_curve` | exactly 2 (start, end) | exactly 1 (end) |
+      | `bezier` | 3 or 4 (start, control(s), end) | 2 or 3 |
 
+    - **`accuracy`**: optional, and only valid on `bezier` segments &ndash; controls how finely the curve is approximated.
 
+    :::note
+    An `s_curve`'s two points must differ in *both* their X and Y coordinates, since the S is fitted into the bounding box spanning between them.
+    :::
 
+  <details>
+  <summary>Worked example</summary>
 
+  A single `path` made of a bottom line, an `arc` bulging out to the right, and a top line; the left side is drawn by the automatic closing line.
+
+  <Tabs>
+  <TabItem value="config" label="Config" default>
+
+  ```yaml
+  points.zones.point:
+  outlines:
+    tag:
+      - what: path
+        segments:
+          - type: line
+            points:
+              - { ref: point, shift: [-10, -6] }
+              - { ref: point, shift: [10, -6] }
+          - type: arc
+            points:
+              - { ref: point, shift: [14, 0] }
+              - { ref: point, shift: [10, 6] }
+          - type: line
+            points:
+              - { ref: point, shift: [-10, 6] }
+  ```
+
+  </TabItem>
+  <TabItem value="visualization" label="Visualization">
+  <div style={{textAlign: 'center'}}>
+
+  ![Path shape](./assets/outlines_shape_path.tag.svg)
+
+  </div>
+  </TabItem>
+  </Tabs>
+
+  </details>
+
+- **`hull`**: A [hull](https://en.wikipedia.org/wiki/Convex_hull) wrapped around a set of anchor points &ndash; great for generating an organic case outline that hugs a cluster of keys.
+
+  - **`points`**: Mandatory array of [anchors](./points.md#anchors) to wrap. Unlike `polygon`, the order of the points doesn't matter, since the hull is computed from the set as a whole.
+
+  - **`extend`**: Optional boolean, default `true`. When `true`, each anchor contributes its *entire* key footprint (using the key's `width`/`height`, `18` by `18` by default) rather than just its center point, so the hull wraps around the keys instead of slicing through their centers. For keys larger than `18` on a side, extra points are added along the edges so the hull can't fold inward. Set it to `false` to hull the bare center points instead.
+
+  - **`concavity`**: Optional number, default `50`. Controls how tightly the outline follows the points: large values approach a plain convex hull, while smaller values let the outline dip inward (concave) to hug the points more closely.
+
+  <details>
+  <summary>Worked example</summary>
+
+  A hull wrapped around a few staggered matrix keys plus a rotated thumb key. Thanks to the default `extend: true`, it hugs the outer edges of the key footprints.
+
+  <Tabs>
+  <TabItem value="config" label="Config" default>
+
+  ```yaml
+  points:
+    zones:
+      matrix:
+        columns:
+          a:
+          b:
+            key.stagger: 8
+          c:
+            key.stagger: 16
+        rows:
+          home:
+          top:
+      thumb:
+        anchor:
+          ref: matrix_a_home
+          shift: [-4, -22]
+          rotate: 20
+  outlines:
+    case:
+      - what: hull
+        points:
+          - matrix_a_top
+          - matrix_c_top
+          - matrix_c_home
+          - thumb
+  ```
+
+  </TabItem>
+  <TabItem value="visualization" label="Visualization">
+  <div style={{textAlign: 'center'}}>
+
+  ![Hull shape](./assets/outlines_shape_hull.case.svg)
+
+  </div>
+  </TabItem>
+  </Tabs>
+
+  </details>
 
 ### Syntactic sugar
 
@@ -545,106 +717,175 @@ joints: beveled
 Finally, "private" outlines: if we only want to use an outline as a building block for further outlines, we can start its name with an underscore (e.g., `_my_name`) to prevent it from being actually exported.
 (By convention, a starting underscore is kind of like a "private" marker.)
 
-
-
-
-
-
-
-
-
-
 ### Examples
 
-<details><summary>Shapes</summary>
-<p>
+<details>
+<summary>Shapes</summary>
+
+Three parts, one of each basic primitive &ndash; a `rectangle`, a `circle`, and a `polygon` (a triangle, whose ref-less points chain relative to one another) &ndash; each placed at its own point.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+points:
+  zones:
+    demo:
+      columns:
+        rect:
+        circ:
+        poly:
+outlines:
+  shapes:
+    - what: rectangle
+      where: demo_rect
+      size: 16
+    - what: circle
+      where: demo_circ
+      radius: 8
+    - what: polygon
+      where: demo_poly
+      points:
+        - shift: [0, 8]
+        - shift: [8, -16]
+        - shift: [-16, 0]
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Basic shapes](./assets/outlines_parts_shapes.shapes.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
-<details><summary>Boolean operations</summary>
-<p>
+<details>
+<summary>Boolean operations</summary>
+
+The first part adds a bound plate over the whole matrix (the default `add` operation), and the second part uses `operation: subtract` to punch a couple of circular mounting holes out of it.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+points:
+  zones:
+    matrix:
+      columns:
+        a:
+        b:
+        c:
+      rows:
+        home:
+        top:
+outlines:
+  plate:
+    - what: rectangle
+      where: true
+      size: 15
+      bound: true
+    - what: circle
+      where: [matrix_a_top, matrix_c_home]
+      radius: 2.5
+      operation: subtract
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Boolean subtract](./assets/outlines_parts_boolean.plate.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
+<details>
+<summary>Asymmetry</summary>
 
-<details><summary>Asymmetry</summary>
-<p>
+The layout is mirrored (via `points.mirror`), so both halves get the plate. The subtracted hole, however, targets a single point &ndash; `matrix_outer_top`. With the default `asym: source` only the left half would get the hole; setting `asym: both` adds the mirror image too, so the hole appears symmetrically on both hands.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+points:
+  zones:
+    matrix:
+      columns:
+        inner:
+        outer:
+      rows:
+        home:
+        top:
+  mirror: 60
+outlines:
+  board:
+    - what: rectangle
+      where: true
+      size: 15
+      bound: true
+    - what: circle
+      where: matrix_outer_top
+      radius: 4
+      asym: both
+      operation: subtract
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Asymmetry with asym both](./assets/outlines_parts_asym.board.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
-<details><summary>Adjustments</summary>
-<p>
+<details>
+<summary>Adjustments</summary>
+
+Both parts use the same `where: true` filter, but the second one carries an `adjust.shift: [0, -12]`, dropping each circle `12` mm *below* its key &ndash; showing how `adjust` places shapes relative to the filtered points rather than exactly on them.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+points:
+  zones:
+    matrix:
+      columns:
+        a:
+        b:
+        c:
+outlines:
+  labels:
+    - what: rectangle
+      where: true
+      size: 15
+    - what: circle
+      where: true
+      radius: 3
+      adjust.shift: [0, -12]
+      operation: stack
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Adjusted placement](./assets/outlines_parts_adjust.labels.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>

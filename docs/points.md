@@ -89,7 +89,7 @@ In a full, object anchor declaration, the following fields can be used:
   - a `parts` array containing the sub-anchors we want to aggregate, and 
   - a `method` string to indicate *how* we want to aggregate them.
 
-  The only method implemented so far is `average`, which is the default anyway, so the `method` can be omitted for now.
+  Two methods are implemented: `average` (the default, which can therefore be omitted) averages the `x`/`y` coordinates *and* the `r` rotation of all parts, while `intersect` projects a line through each part along its rotated Y axis and returns the point where those lines cross (erroring out if they're parallel).
 
   :::note
   Averaging applies to both the `x`/`y` coordinates *and* the `r` rotation.
@@ -149,8 +149,8 @@ In a full, object anchor declaration, the following fields can be used:
 
 ### Examples
 
-<details><summary>Basic</summary>
-<p>
+<details>
+<summary>Basic</summary>
 
 To get the gist of what's happening, take a look at the following anchor config and its visualization.
 It first orients itself 45°, then it shift "one to the right", but since its orientation is now 45°, "right" means "up and to the right" along the diagonal line.
@@ -176,11 +176,10 @@ anchor:
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
-<details><summary>Follow-the-dots</summary>
-<p>
+<details>
+<summary>Follow-the-dots</summary>
 
 We can now turn towards multi-anchors, which are just regular anchors in an array.
 Arrays in YAML are denoted by using the dash (`-`) notation and an extra level of indent.
@@ -215,11 +214,10 @@ anchor:
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
-<details><summary>Averaging</summary>
-<p>
+<details>
+<summary>Averaging</summary>
 
 Here we can see how to aggregate two existing points.
 `left` is at `[-1, 0, -90°]`, marked green, while `right` is at `[1, 0, 90°]`, marked blue.
@@ -251,11 +249,10 @@ anchor:
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
-<details><summary>Affecting</summary>
-<p>
+<details>
+<summary>Affecting</summary>
 
 Let's say we have an existing point at `[-1, 0, 45°]`, fittingly named `existing`, and we want a new point "facing the other way".
 It would be easy to add 180° to its rotation, if we knew it &ndash; but as we saw in previous examples, some coordinate values are not exactly round numbers and using them would be easier through calculation.
@@ -286,11 +283,10 @@ anchor:
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
-<details><summary>Resisting</summary>
-<p>
+<details>
+<summary>Resisting</summary>
 
 Let's take the same starting point we have in the Averaging example, only now the existing points are not separate, but mirror images of each other, named `left` at `[-1,0,-90°]` (green) and `mirror_left` at `[1,0,90°]` (blue).
 Read more on [mirroring](#mirroring) later.
@@ -314,13 +310,13 @@ anchor_1:
 
 # 2, default mirrored case
 anchor_2:
-  ref: left_mirror
+  ref: mirror_left
   shift: [1, 0]
   rotate: 45
 
 # 3, mirrored case with resistance
 anchor_3:
-  ref: left_mirror
+  ref: mirror_left
   shift: [1, 0]
   rotate: 45
   resist: true
@@ -336,7 +332,6 @@ anchor_3:
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
 <br />
@@ -571,6 +566,13 @@ points.zones.matrix:
     "colrow": "default_default",
     "name": "matrix",
     "zone": {
+      "columns": {
+        "default": {
+          "rows": {},
+          "key": {},
+          "name": "default"
+        }
+      },
       "name": "matrix"
     },
     "col": {
@@ -629,6 +631,13 @@ points.zones.matrix.key:
         "answer": 42
       },
       // highlight-end
+      "columns": {
+        "default": {
+          "rows": {},
+          "key": {},
+          "name": "default"
+        }
+      },
       "name": "matrix"
     },
     "col": {
@@ -803,24 +812,50 @@ We create the new column anchor by `spread`ing/`stagger`ing/`splay`ing the old o
 
 
 Once we have an existing zone (`matrix`), we can anchor further zones to it &ndash; like, say, a thumbfan.
+Because zones are laid out in declaration order, every point of the `matrix` zone already exists by the time we get to the next zone, so we can reference any of them by `name`.
+Here we anchor a `thumbfan` zone to the bottom key of the matrix's inner column (`matrix_inner_bottom`), `shift` it down and to the side to clear the keywell, then let its columns `splay` around into a fan.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+points.zones:
+  matrix:
+    anchor.rotate: 5
+    columns:
+      pinky:
+      ring.key:
+        splay: -5
+        stagger: 12
+        origin: [-u/2, -u/2]
+      middle.key.stagger: 5
+      index.key.stagger: -6
+      inner.key.stagger: -2
+    rows:
+      bottom:
+      home:
+      top:
+  thumbfan:
+    anchor:
+      ref: matrix_inner_bottom
+      shift: [-7, -19]
+    columns:
+      near:
+      home.key.splay: -28
+      far.key:
+        splay: -28
+        spread: 21
+    rows:
+      thumb:
 ```
 
 </TabItem>
-<TabItem value="1" label="1">
+<TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![Thumbfan - step 1](./assets/thumbfan_1.png) -->
+![Matrix with an anchored thumbfan](./assets/points_thumbfan.demo.svg)
 
 </div>
-
-**Step 1**: 
-
 </TabItem>
 </Tabs>
 
@@ -832,79 +867,111 @@ Once we have an existing zone (`matrix`), we can anchor further zones to it &nda
 
 ### Examples
 
-<details><summary>Choc spacing</summary>
-<p>
+<details>
+<summary>Choc spacing</summary>
 
-arst neio
+The default `spread` and `padding` of `u` (19mm) match MX switch spacing.
+Choc switches sit closer together, so we override both with the built-in `cx` (18mm) and `cy` (17mm) units &ndash; `spread` sets the horizontal gap between columns, `padding` the vertical gap between rows.
+We also shrink the demo `width`/`height` to match, since those default to `u-1`.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+points.zones.matrix:
+  columns:
+    pinky:
+    ring:
+    middle:
+  rows:
+    bottom:
+    home:
+    top:
+  key:
+    spread: cx
+    padding: cy
+    width: cx-1
+    height: cy-1
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Choc-spaced 3x3 matrix](./assets/points_choc.demo.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
-<details><summary>Row overrides</summary>
-<p>
+<details>
+<summary>Row overrides</summary>
 
-arst neio
+Rows declared zone-wide apply to every column, but any column can override them.
+Here `bottom`/`home`/`top` are defined once for the whole zone, and the pinky column drops its top key with the `$unset` directive &ndash; a common trick for leaving the shorter pinky finger only two keys.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+points.zones.matrix:
+  columns:
+    pinky:
+      rows.top: $unset
+    ring:
+    middle:
+  rows:
+    bottom:
+    home:
+    top:
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Matrix with the pinky top key dropped](./assets/points_rows.demo.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
-<details><summary>Column arcs</summary>
-<p>
+<details>
+<summary>Column arcs</summary>
 
-arst neio
+Because `splay` is applied **cumulatively** from column to column, giving every column the same splay bends a single row of keys into an even arc.
+The `origin` moves the hinge point away from each key's center &ndash; here to the bottom-left corner (`[-u/2, -u/2]`) &ndash; so successive columns fan out around a shared pivot instead of just spinning in place.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+points.zones.matrix:
+  columns:
+    c1:
+    c2:
+    c3:
+    c4:
+    c5:
+  key:
+    splay: -12
+    origin: [-u/2, -u/2]
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Five columns splayed into an arc](./assets/points_arc.demo.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
 <br />
@@ -1002,78 +1069,119 @@ This should be generic enough to describe any ergo layout, yet hopefully easy en
 
 ### Examples
 
-<details><summary>Zone-level adjustment</summary>
-<p>
+<details>
+<summary>Zone-level adjustment</summary>
 
-arst neio
+A `rotate` placed directly under a zone (next to `columns`/`rows`, not inside `key`) turns just that zone's points, around the global origin `[0, 0]`.
+Here the zone is shifted 50mm to the right first, so the 20° rotation visibly swings the whole block up and around the origin rather than spinning it in place.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+points.zones.matrix:
+  anchor.shift: [50, 0]
+  columns:
+    a:
+    b:
+    c:
+  rows:
+    bottom:
+    top:
+  rotate: 20
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Zone rotated 20 degrees around the origin](./assets/points_zonerot.demo.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
-<details><summary>Post-adjustment zones</summary>
-<p>
+<details>
+<summary>Post-adjustment zones</summary>
 
-arst neio
+Zone-level `rotate`/`mirror` fire while that single zone is being placed.
+The `rotate`/`mirror` fields at the top `points` level instead run **after every zone is laid out**, so they adjust all zones together.
+Here a `matrix` and a `thumb` zone are built independently, then a global `points.mirror` reflects the whole assembly across an axis at `x = 5`, producing a matching right half in one stroke.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+points:
+  zones:
+    matrix:
+      anchor.shift: [20, 0]
+      columns:
+        a:
+        b:
+      rows:
+        bottom:
+        top:
+    thumb:
+      anchor:
+        ref: matrix_a_bottom
+        shift: [0, -19]
+      columns:
+        t:
+  mirror: 5
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Two zones mirrored together by a global mirror](./assets/points_postadj.demo.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>
 
-<details><summary>Asymmetry</summary>
-<p>
+<details>
+<summary>Asymmetry</summary>
 
-arst neio
-- don't forget a key-level mirror example here, too
+Not every board is symmetric.
+The `asym` attribute controls which side a key lands on: `clone` means the key is **moved** to the mirrored side only (it disappears from the source), while `source` would keep it on the source side only.
+Here the `inner` column is `asym: clone`, so it shows up only on the right (mirrored) half.
+
+The key-level `mirror` attribute is separate: it overrides other attributes for the mirrored copies only.
+We use it to give every mirrored key a narrower demo `width` of 10, which is why the right half is visibly slimmer than the left.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
 
 ```yaml
-
+points:
+  zones:
+    matrix:
+      columns:
+        main:
+        inner:
+          key.asym: clone
+      rows:
+        bottom:
+        top:
+  key:
+    mirror.width: 10
+  mirror: 40
 ```
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
 <div style={{textAlign: 'center'}}>
 
-<!-- ![name](./assets/file.png) -->
+![Asymmetric mirror with a clone-only column and narrower mirrored keys](./assets/points_asym.demo.svg)
 
 </div>
 </TabItem>
 </Tabs>
 
-</p>
 </details>

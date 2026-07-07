@@ -1,24 +1,49 @@
 # Ergogen documentation
 
-This repository contains the documentation for [Ergogen](https://github.com/ergogen/ergogen).  
-The latest version is deployed [here](https://docs.ergogen.xyz/).
+This repository contains the documentation for [Ergogen](https://github.com/ergogen/ergogen), the
+ergonomic keyboard layout generator.
 
-### Contributing
+This fork is deployed via GitHub Pages at **https://kumekay.github.io/ergogen-docs/** and tracks the
+[`kumekay/ergogen`](https://github.com/kumekay/ergogen) engine (v4.2.1).
 
-To submit improvements and fixes to the documentation: fork this repository and make your changes in [/docs](./docs).
-You can preview your changes using a local setup or by submitting a PR to get a deployment preview built for you.
+## Contributing
 
-### Deployment
+To submit improvements and fixes to the documentation: fork this repository and edit the Markdown
+under [`/docs`](./docs). Opening a PR builds a deploy preview so you can check your changes.
 
-PRs that are merged into the `main` branch will automatically be deployed to https://docs.ergogen.xyz/ using GitHub actions.
+The example configs and visualizations are generated from the real engine — see
+[`helpers/render.js`](./helpers/render.js), which runs a config through a local ergogen checkout and
+emits themed SVGs into `docs/assets/`:
 
-### Local Development
-
+```sh
+node helpers/render.js path/to/config.yaml docs/assets my_example
 ```
-$ yarn
-$ yarn start
+
+Set `ERGOGEN_PATH` if your ergogen checkout isn't at `/home/ku/p/kumekay/ergogen`.
+
+## Local development
+
+Requires **Node.js 18+**.
+
+```sh
+npm install
+npm start
 ```
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server. Note that Node.js v17 changed to OpenSSL 3.0, causing a startup error in the current config, which (for the time being) can be circumvented by using `NODE_OPTIONS="--openssl-legacy-provider" yarn start` instead.
+This starts a local dev server with hot reload. To produce a production build:
 
-This website is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
+```sh
+npm run build
+npm run serve   # preview the build locally
+```
+
+## Deployment
+
+Pushing to `main` builds the site and publishes it to GitHub Pages via
+[`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml). Enable Pages for the repository
+with **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+
+The public URL is controlled by `url`/`baseUrl` in [`docusaurus.config.js`](./docusaurus.config.js)
+(overridable via the `SITE_URL` / `BASE_URL` environment variables).
+
+This website is built with [Docusaurus 3](https://docusaurus.io/), a modern static site generator.
