@@ -45,7 +45,7 @@ output/
 
 ## Using ergogen with an AI agent
 
-This repo ships an [agent skill](https://github.com/kumekay/ergogen-docs/blob/main/ergogen/SKILL.md)
+This repo ships an [agent skill](https://github.com/kumekay/ergogen-docs/blob/main/skills/ergogen/SKILL.md)
 that teaches coding agents (Claude Code, etc.) to drive the CLI correctly — the same
 config-filename / `--clean` / `--debug` guidance above, in a form agents pick up automatically.
 Install it with the [`skills`](https://github.com/vercel-labs/skills) CLI:
