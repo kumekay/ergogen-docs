@@ -73,3 +73,7 @@ So the above example would change to:
 ```shell
 node src/cli.js input.yaml -o output_folder
 ```
+
+:::tip
+Want the essentials on one page (or an [agent skill](./cli-cheatsheet.md#using-ergogen-with-an-ai-agent) that teaches coding agents to run ergogen)? See the [CLI cheatsheet](./cli-cheatsheet.md).
+:::
