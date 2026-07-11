@@ -19,6 +19,14 @@ emits themed SVGs into `docs/assets/`:
 node helpers/render.js path/to/config.yaml docs/assets my_example
 ```
 
+3D case examples work the same way through [`helpers/render3d.js`](./helpers/render3d.js), which
+evaluates the generated JSCAD scripts and emits binary STL files into `static/models/` for the
+interactive viewer ([`src/components/StlViewer.js`](./src/components/StlViewer.js)):
+
+```sh
+node helpers/render3d.js path/to/config.yaml static/models my_example
+```
+
 Set `ERGOGEN_PATH` if your ergogen checkout isn't at `/home/ku/p/kumekay/ergogen`.
 
 ## Local development
