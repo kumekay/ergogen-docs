@@ -1,1 +1,0 @@
-"use strict";(globalThis.webpackChunkergogen_docs=globalThis.webpackChunkergogen_docs||[]).push([[124],{2264(e){e.exports=JSON.parse('{"metadata":{"permalink":"/ergogen-docs/pr-preview/pr-4/blog","page":1,"postsPerPage":10,"totalPages":1,"totalCount":0,"blogDescription":"Blog","blogTitle":"Blog"}}')}}]);
