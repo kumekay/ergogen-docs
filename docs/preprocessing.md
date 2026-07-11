@@ -59,13 +59,13 @@ This consists of the following steps:
     child:
         $extends: parent
         $args: [,value2]
+        $skip: false
     ```
 
-  Here, the grandparent defines two different parameters, but only the child knows both arguments that should be substituted. This would lead to an error at the parent's level, because it has two parameters, and only one argument. But, assuming that this is just an intermediary abstract declaration and we wouldn't want to use it anyway, we can just declare `$skip: true`.
+  Here, the grandparent defines two different parameters, but only the child knows both arguments that should be substituted. This would lead to an error at the parent's level, because it has two parameters, and only one argument. But, assuming that this is just an intermediary abstract declaration and we wouldn't want to use it anyway, we can just declare `$skip: true`. Note that `$skip` is inherited through `$extends` like any other field, so the child has to declare `$skip: false` to opt back in &ndash; otherwise it would be silently skipped along with its parent.
 
-The result of the preprocessor is *almost* just a plain JSON object.
-The only semantic difference is how numbers are handled. For example, the value `3 * 2` would lead to a string type in JSON, but since it's a mathematical formula, it can also be interpreted as a number.
-Ergogen tries this interpretation for every string value, and if it succeeds, it calculates the results and converts them to JSON numbers.
+The result of the preprocessor is just a plain JSON object.
+One thing to keep in mind for later, though, is how numbers are handled. For example, the value `3 * 2` is a string as far as the preprocessor is concerned, and it stays a string in the preprocessed config. But whenever a field is expected to contain a number, Ergogen tries to interpret such strings as mathematical formulas, and calculates their results.
 This syntax also works with variables, which we can use to define units (see below).
 
 Otherwise, we can begin with the actual keyboard-related layout...

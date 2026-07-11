@@ -24,7 +24,8 @@ For anything beyond a lone config file, you can hand Ergogen a **bundle**: a `.z
 
 What Ergogen emits mirrors the config's structure. Note that several artifacts are only produced in **debug mode** (`-d` on the CLI, always on for KLE input) - in normal mode you get just the "real" deliverables.
 
-- **points** (debug only) - the computed key positions, dumped as `points.yaml`, the resolved `units.yaml`, the original `raw` source, the `canonical` (fully preprocessed) config, and a `demo` visualization of the layout.
+- **source** (debug only) - the original `raw` input and the `canonical` (fully preprocessed) config.
+- **points** (debug only) - the computed key positions, dumped as `points.yaml`, the resolved `units.yaml`, and a `demo` visualization of the layout.
 - **outlines** - every named outline as a **DXF** (always). An **SVG** render is added when you pass `--svg` or run in debug mode. Outlines whose name starts with `_` are treated as intermediate helpers and only surface in debug mode.
 - **cases** - each case as a **JSCAD** script (`.jscad`). That's the only case format for now; you run it through JSCAD yourself to get a mesh. As with outlines, `_`-prefixed cases are debug-only.
 - **pcbs** - each PCB as a KiCad board file (`.kicad_pcb`). These are *unrouted* - Ergogen places and nets the footprints and draws the edge cuts, but leaves routing, schematics, and the surrounding KiCad project to you. `_`-prefixed PCBs are, again, debug-only.

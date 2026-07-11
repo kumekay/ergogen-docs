@@ -89,7 +89,7 @@ In a full, object anchor declaration, the following fields can be used:
   - a `parts` array containing the sub-anchors we want to aggregate, and 
   - a `method` string to indicate *how* we want to aggregate them.
 
-  Two methods are implemented: `average` (the default, which can therefore be omitted) averages the `x`/`y` coordinates *and* the `r` rotation of all parts, while `intersect` projects a line through each part along its rotated Y axis and returns the point where those lines cross (erroring out if they're parallel).
+  Two methods are implemented: `average` (the default, which can therefore be omitted) averages the `x`/`y` coordinates *and* the `r` rotation of all parts, while `intersect` expects exactly two parts, projects a line through each along its rotated Y axis, and returns the point where those lines cross (erroring out if they're parallel). Note that unlike `average`, `intersect` resets the resulting rotation to `0`.
 
   :::note
   Averaging applies to both the `x`/`y` coordinates *and* the `r` rotation.
@@ -188,8 +188,10 @@ Only now, the result of the basic example won't be the end, only the starting po
 
 Shifting with a positive `x` coordinate usually means "visually right", but remember that our starting point (resulting from the first sub-anchor) faces down, so positive `x` values here mean "visually left".
 
-On top of this, we demonstrate how `rotate` (or `orient`) works when given a sub-anchor instead of a number, turning towards the center, automatically calculating the degrees of rotation it requires.
-Hopefully this demonstrates how easy it is to get to very non-obvious coordinates using nice "round" numbers only &ndash; no &pi; in sight!
+On top of this, we demonstrate how `rotate` (or `orient`) works when given a sub-anchor instead of a number: the point turns towards the location the sub-anchor resolves to, automatically calculating the degrees of rotation it requires.
+One thing to keep in mind is that such a sub-anchor is resolved relative to the result of the *previous* sub-anchor &ndash; not the global origin.
+Here, the previous sub-anchor ended up at `[0.707, 0.707]` facing down (at 180°), so shifting `sqrt(2)/2` (&asymp;0.707) on both axes walks it back exactly to the center, and that's what we turn towards.
+Hopefully this demonstrates how easy it is to get to very non-obvious coordinates &ndash; no &pi; in sight!
 For the record, the final result is a point at `[-0.293, 0.707, -157.5°]`.
 
 <Tabs>
@@ -201,7 +203,7 @@ anchor:
     shift: [1, 0]
     rotate: 135
   - shift: [1, 0]
-    rotate.shift: [0, 0]
+    rotate.shift: [sqrt(2)/2, sqrt(2)/2]
 ```
 
 </TabItem>
@@ -459,7 +461,7 @@ These are the following:
   Its default value is `0` (also overrideable with the `$default_stagger` internal variable).
 
 - **`spread`**:
-  Once a column has been laid out, `spread` (the horizontal space between this column and the next) is applied before the layout of the next column begins.
+  A column's `spread` is the horizontal space between the *previous* column and this one, applied before the column's layout begins (and consequently ignored for the first column, which has no previous neighbour).
   Its default value is `u` (also overrideable with the `$default_spread` internal variable).
 
 - **`splay`**:
@@ -646,7 +648,7 @@ points.zones.matrix.key:
       "name": "default"
     },
     "row": "default",
-    "bind": [0, 0, 0, 0],
+    "bind": [0, 0, 0, 0]
   }
 }
 ```
@@ -1056,7 +1058,7 @@ The default value of `both` assumes symmetry &ndash; so the given point should a
 
 :::tip
 The `source`/`clone` pair was chosen to replace the old `left`/`right` as the canonical options for the `asym` field so as not to make any hardcoded assumptions about the spatial relationships between original and mirrored positions.
-But as aliases, `origin`/`image`, `base`/`derived`, `primary`/`seconday` and even the old `left`/`right` pairs are also supported, so feel free to use whichever makes most sense to you.
+But as aliases, `origin`/`image`, `base`/`derived`, `primary`/`secondary` and even the old `left`/`right` pairs are also supported, so feel free to use whichever makes most sense to you.
 :::
 
 And this concludes point definitions.
@@ -1108,7 +1110,7 @@ points.zones.matrix:
 
 Zone-level `rotate`/`mirror` fire while that single zone is being placed.
 The `rotate`/`mirror` fields at the top `points` level instead run **after every zone is laid out**, so they adjust all zones together.
-Here a `matrix` and a `thumb` zone are built independently, then a global `points.mirror` reflects the whole assembly across an axis at `x = 5`, producing a matching right half in one stroke.
+Here a `matrix` and a `thumb` zone are built independently, then a global `points.mirror` reflects the whole assembly across an axis at `x = 5`, producing the matching other half in one stroke (landing to the left in this case, since the source zones sit to the right of the axis).
 
 <Tabs>
 <TabItem value="config" label="Config" default>
