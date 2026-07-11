@@ -27,15 +27,23 @@ const only = onlyArg ? onlyArg.slice('--only='.length).split(',').filter(Boolean
 
 // Add a white rounded background and recolor strokes so the diagram is legible
 // on both light and dark documentation backgrounds.
+// px per mm of board; the docs embed these SVGs through <img> tags, which
+// need an explicit intrinsic width (percentages resolve to the tiny mm size)
+const SCALE = 6
 const themeSvg = (svg, pad = 6) => {
     const m = svg.match(/viewBox="([\d.\- ]+)"/)
     if (!m) return svg
     let [x, y, w, h] = m[1].trim().split(/\s+/).map(Number)
     x -= pad; y -= pad; w += pad * 2; h += pad * 2
-    // widen the viewBox and drop the fixed mm width/height so it scales in a container
+    // widen the viewBox and replace the fixed mm size with a scaled-up pixel
+    // width (height follows the viewBox aspect ratio)
     svg = svg.replace(/viewBox="[\d.\- ]+"/, `viewBox="${x} ${y} ${w} ${h}"`)
-    svg = svg.replace(/\swidth="[^"]*"/, ' width="100%"')
+    svg = svg.replace(/\swidth="[^"]*"/, ` width="${Math.round(w * SCALE)}"`)
     svg = svg.replace(/\sheight="[^"]*"/, '')
+    // ergogen strokes default to a non-scaling 0.25mm (~1px), which reads
+    // faint at the scaled-up size; thicken for legibility
+    svg = svg.replace(/stroke-width:\s*0\.25mm/g, 'stroke-width:0.45mm')
+    svg = svg.replace(/stroke-width="0\.25mm"/g, 'stroke-width="0.45mm"')
     // ergogen strokes default to #000; keep them but guarantee a light backdrop
     const bg = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="#ffffff"/>`
     svg = svg.replace(/(<svg[^>]*>)/, `$1${bg}`)

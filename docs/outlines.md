@@ -73,7 +73,8 @@ And if autobinding fails for a more complex shape, we can always fall back to ex
 <details>
 <summary>Explicit bind</summary>
 
-Here each `15` mm key rectangle gets an explicit `bind: 4`, so every shape grows 4 mm in all four directions &ndash; more than enough to bridge the 4 mm gaps between neighbours and fuse into one contiguous plate (note the `bound: true` on the part, which actually activates the binding).
+Here each `15` mm key rectangle of a small column-staggered layout gets an explicit `bind: 4`, so every shape grows 4 mm in all four directions &ndash; more than enough to bridge the 4 mm gaps between neighbours and fuse into one contiguous plate (note the `bound: true` on the part, which actually activates the binding).
+The column stagger carries over into the plate as steps along its top and bottom edges.
 Since a single-number `bind` grows the shapes outward as well, the plate also gains a 4 mm margin all around &ndash; the same result we'd get by simply placing oversized tiles.
 To keep the margin tight, we could declare per-direction binds instead &ndash; or let autobind do exactly that for us, as the next example shows.
 
@@ -85,9 +86,13 @@ points:
   zones:
     matrix:
       columns:
-        a:
-        b:
-        c:
+        pinky:
+        ring:
+          key:
+            stagger: 7
+        middle:
+          key:
+            stagger: 3
       rows:
         home:
         top:
@@ -118,6 +123,7 @@ outlines:
 
 The exact same layout, but without any `bind` declaration at all.
 With `bound: true`, Ergogen falls back to `autobind` (default `10`), figures out the neighbouring directions on its own, and still produces a contiguous plate &ndash; no manual binding required.
+Compare the result with the explicit example above: only the inward-facing sides grow, so the plate hugs the staggered keys tightly instead of adding an outer margin.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
@@ -127,9 +133,13 @@ points:
   zones:
     matrix:
       columns:
-        a:
-        b:
-        c:
+        pinky:
+        ring:
+          key:
+            stagger: 7
+        middle:
+          key:
+            stagger: 3
       rows:
         home:
         top:
