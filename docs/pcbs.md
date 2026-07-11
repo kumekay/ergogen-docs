@@ -26,7 +26,7 @@ pcbs:
       ...
     footprints:
       - where: <filter> # same as for outlines
-        asym: source | clone | both # same as for outlines, default = both
+        asym: source | clone | both # same as for outlines, default = source
         adjust: <anchor> # same as for outlines
         what: <footprint to use>
         params: <param object for the footprint>
@@ -237,7 +237,7 @@ module.exports = {
 
 So the main export is an object containing A) a `params` sub-object declaring what can be / should be supplied to this footprint as a parameter (as well as default values for these, hinging at the type of the param), and then a `body` function that gets the parsed (and potentially, user-overridden) parameters and spits out a KiCAD module that can be inserted into a template as a raw string.
 
-Of the `params`, only the `designator` is shared among all footprint types, as the footprint needs to be called *something* on the generated PCB. By default, it's just an underscore (`_`). This then acts as a prefix that gets a number suffix to make the name for each footprint of this kind unique. All other parameters are optional and footprint-specific, which users can override in their configs.
+Of the `params`, the `designator` appears in almost every footprint type, as the footprint needs to be called *something* on the generated PCB. By default, it's just an underscore (`_`), which is also the fallback for footprints that don't declare a designator of their own (like the built-in `via` and `mounthole`). This then acts as a prefix that gets a number suffix to make the name for each footprint of this kind unique. All other parameters are optional and footprint-specific, which users can override in their configs.
 
 The heavy lifting is done by the `body` function, that converts the footprint's template to an actual footprint string (after some optional procedural calculations, loops, parameter-based conditional branching, etc.). It's where the position and rotation of the footprint are inserted into its `at` clause (so it'll end up where we want it on the PCB), and where the reference name and any other custom parameters are "filled out" (for example, which pad or through-hole should connect to which net).
 
@@ -248,7 +248,7 @@ Boolean, string, number, array and object parameters can be used intuitively (si
   - `index` - the numeric index of the net (sometimes KiCAD needs this info, too)
   - `str` - a string representation, containing both name and index, defined as `(net ${index} "${name}")` (and this is also the default string representation of the whole object, if printed directly).
 
-- `anchor` type parameters get points that have the expected `x`/`y`/`r` fields, plus the corresponding metadata of the point under the `meta` key.
+- `anchor` type parameters get points that have the expected `x`/`y`/`r` fields, plus the corresponding metadata of the point under the `meta` key. Note that the `y` coordinate is already negated to match KiCAD's downward-pointing Y axis, so don't mix it with Ergogen-space values without accounting for the sign.
 
 :::tip
 If you're creating a custom Ergogen footprint, your best bet is looking at how an existing footprint incorporates the actual KiCAD footprint text and wraps it with its own minimal "infrastructure". From there, you can just A) make the positioning parametric, B) decouple a few parameters you want the users to be able to specify in their configs, and C) swap out the occurrences of those values in the footprint text for references to the corresponding parameter values.
@@ -298,7 +298,7 @@ All four of these are used in the form `[i/e][s/a]xy(x, y)` - so, a function cal
 Besides footprints, Ergogen also provides a set of default, built-in templates for different KiCAD versions (found in [this folder](https://github.com/ergogen/ergogen/tree/master/src/templates)). Two are available, selected via `pcbs.<pcb_name>.template`:
 
 - `kicad5` (the **default**): emits the legacy KiCAD 5 file format (`version 20171130`, `host pcbnew 5.1.6`). Outlines are drawn with the old `gr_line`/`gr_arc`/`gr_circle` syntax (an explicit `(width ...)` and, for lines, `(angle 90)`), and the PCB carries a `net_class` block. Kept as the default for backwards compatibility.
-- `kicad8`: emits the modern KiCAD 6/7/8 format (`version 20240108`, `generator "ergogen"`). Outlines use the newer `(stroke (width ...) (type default))` styling, arcs are written as start/mid/end triples, and a build date is stamped into the title block. Pick this one if you're opening the result in a current KiCAD.
+- `kicad8`: emits the modern KiCAD 8 file format (`version 20240108`, `generator "ergogen"`) &ndash; note that this format version is too new for KiCAD 6/7 to open. Outlines use the newer `(stroke (width ...) (type default))` styling, arcs are written as start/mid/end triples, and a build date is stamped into the title block. Pick this one if you're opening the result in a current KiCAD.
 
 The generated PCB is functionally the same either way &ndash; only the file format encoding differs, so choose the template that matches your KiCAD version.
 
@@ -326,9 +326,9 @@ This stuff is really technical, but if you're this deep, you probably (need to) 
 - `name`: the name of the PCB, based on the config,
 - `version`: the version of the PCB, based on the [`meta` block](./metadata.md),
 - `author`: the author of the PCB, based on the [`meta` block](./metadata.md),
-- `nets`: an object containing all nets present in the PCB, formatted as `{name: index, ...}`,
+- `nets`: an array of net objects for all nets present in the PCB, each with `name`/`index` fields and a `str` representation (see [Footprints](#footprints) above),
 - `footprints`: an array of all precomputed footprints, already in their final text form (see [Footprints](#footprints) above),
-- `outlines`: an object of all precomputed shapes from `convert_outlines`, formatted as `{name: text, ...}`,
+- `outlines`: an object of all precomputed shapes from `convert_outline`, formatted as `{name: text, ...}`,
 - `custom`: any other custom user-supplied parameters from `pcbs.<pcb_name>.params`.
 
 :::tip

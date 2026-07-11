@@ -4,6 +4,7 @@ sidebar_position: 7
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import StlViewer from '@site/src/components/StlViewer';
 
 # Cases
 
@@ -84,11 +85,12 @@ cases:
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
+
+<StlViewer model="/models/cases_simple.plate.stl" />
+
 <div style={{textAlign: 'center'}}>
 
-![Source outline extruded into the 3D case](./assets/cases_simple.board.svg)
-
-Source outline (extruded into the 3D case).
+The extruded `plate` case (drag to orbit, scroll to zoom).
 
 </div>
 </TabItem>
@@ -143,11 +145,12 @@ cases:
 
 </TabItem>
 <TabItem value="visualization" label="Visualization">
+
+<StlViewer model="/models/cases_unibody.shell.stl" />
+
 <div style={{textAlign: 'center'}}>
 
-![Source outline extruded into the 3D case](./assets/cases_unibody.board.svg)
-
-Source outline (extruded into the 3D case).
+The final `shell` case, hollowed into a tray (drag to orbit, scroll to zoom).
 
 </div>
 </TabItem>

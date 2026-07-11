@@ -56,6 +56,7 @@ Add `--svg` (alias `--generate-svg`) if you want SVG outline renders without ful
 
 ```
 output/
+  source/     # (debug) raw input + canonical (preprocessed) config
   points/     # (debug) parsed points + demo visualization
   outlines/   # <name>.dxf always; <name>.svg with --svg or --debug
   cases/      # <name>.jscad  (3D; render/convert separately)

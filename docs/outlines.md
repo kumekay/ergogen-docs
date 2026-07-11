@@ -53,7 +53,7 @@ bind: num | [num_x, num_y] | [num_t, num_r, num_b, num_l] # defer to autobind by
 ```
 
 To recap, key-level declaration means that `bind` should be specified in the `points` section, benefiting from the same extension process every key-level attribute does.
-Valid values follow CSS standards, so `num` applies to all directions, `num_x` horizontally, `num_y` vertically, and the `t`/`r`/`b`/`l` versions to top/right/bottom/left, respectively.
+A single `num` applies to all directions, the two-element form sets the horizontal (`num_x`) and vertical (`num_y`) growth, and the four-element form follows the CSS order of top/right/bottom/left.
 
 :::tip
 Don't recall seeing `bind` in the [Keys](./points.md#keys) section, where supposedly all key-level attributes were listed?
@@ -73,8 +73,10 @@ And if autobinding fails for a more complex shape, we can always fall back to ex
 <details>
 <summary>Explicit bind</summary>
 
-Here each `15` mm key rectangle gets an explicit `bind: 4`, so the shapes grow just enough to touch their neighbours and fuse into one contiguous plate (note the `bound: true` on the part, which actually activates the binding).
-Because we only grow by the amount we need, the final margin stays tight &ndash; much smaller than we'd get by simply placing oversized tiles.
+Here each `15` mm key rectangle of a small column-staggered layout gets an explicit `bind: 4`, so every shape grows 4 mm in all four directions &ndash; more than enough to bridge the 4 mm gaps between neighbours and fuse into one contiguous plate (note the `bound: true` on the part, which actually activates the binding).
+The column stagger carries over into the plate as steps along its top and bottom edges.
+Since a single-number `bind` grows the shapes outward as well, the plate also gains a 4 mm margin all around &ndash; the same result we'd get by simply placing oversized tiles.
+To keep the margin tight, we could declare per-direction binds instead &ndash; or let autobind do exactly that for us, as the next example shows.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
@@ -84,9 +86,13 @@ points:
   zones:
     matrix:
       columns:
-        a:
-        b:
-        c:
+        pinky:
+        ring:
+          key:
+            stagger: 7
+        middle:
+          key:
+            stagger: 3
       rows:
         home:
         top:
@@ -117,6 +123,7 @@ outlines:
 
 The exact same layout, but without any `bind` declaration at all.
 With `bound: true`, Ergogen falls back to `autobind` (default `10`), figures out the neighbouring directions on its own, and still produces a contiguous plate &ndash; no manual binding required.
+Compare the result with the explicit example above: only the inward-facing sides grow, so the plate hugs the staggered keys tightly instead of adding an outer margin.
 
 <Tabs>
 <TabItem value="config" label="Config" default>
@@ -126,9 +133,13 @@ points:
   zones:
     matrix:
       columns:
-        a:
-        b:
-        c:
+        pinky:
+        ring:
+          key:
+            stagger: 7
+        middle:
+          key:
+            stagger: 3
       rows:
         home:
         top:
@@ -170,7 +181,7 @@ First up, let's see what a filter means depending on what datatype we use when d
 
 - **string**: represents a single/simple filter &ndash; the workings of which we'll discuss in a second.
 
-- **object**, or **array that contains an object** somewhere: will be parsed as an [anchor](./points.md#anchors), returning the single resulting point.
+- **object**, or **array that contains an object** somewhere: will be parsed as an [anchor](./points.md#anchors), returning the resulting point (or two points, when the anchor references a mirrored key and `asym` is `both` &ndash; see the caution box below).
 
   :::note
   Although there can be valid anchor declarations that are neither objects, nor arrays containing an object at any depth, these are not supported where filters are expected because Ergogen would have no way to decide what it's looking at.
@@ -496,11 +507,11 @@ If `true`, the corresponding binding rectangles are added to each relevant side 
   This field makes it possible to place shapes not only **at** certain filtered points, but also **below** or **next to** those points.
   :::
 
-- **`scale`**: an optional multiplier by which to scale the resulting shape.
+- **`scale`**: an optional multiplier by which to scale the outline as it stands after the current part is combined into it &ndash; that is, including all previous parts, not just the current one.
   The default is `1` for no scaling.
 
-- **`expand`**: a number in mm's by which to expand (or shrink, if the number is negative) the current outline.
-  Differs from `scale`ing because it draws and external (or internal) "outline" for the starting shape, thereby usually changing the shape itself, too, not just its size.
+- **`expand`**: a number in mm's by which to expand (or shrink, if the number is negative) the current outline (again, the combined result so far, not just the current part).
+  Differs from `scale`ing because it draws an external (or internal) "outline" for the starting shape, thereby usually changing the shape itself, too, not just its size.
   For more info, see the relevant [Maker.JS docs](https://maker.js.org/docs/advanced-drawing/#Expanding%20paths).
 
 - **`joints`**: a companion to `expand`, specifying which type of treatment to apply to the joints during expansion/shrinking.
@@ -509,7 +520,7 @@ If `true`, the corresponding binding rectangles are added to each relevant side 
   - `1` or `pointy` means the corners will stay (thereby still having **one** joint); and
   - `2` or `beveled` means the corners will get beveled (thereby having **two** joints).
 
-- **`fillet`**: this number (if greater than the default zero) triggers a filleting operation on the (almost-)completed part and rounds its corners with the given radius.
+- **`fillet`**: this number (if greater than the default zero) triggers a filleting operation on the outline as it stands after the current part (like `scale` and `expand` above) and rounds its corners with the given radius.
   If the radius is larger than either of the corner's neighboring line segments, that corner is skipped.
 
   :::tip
@@ -531,7 +542,7 @@ With this, let's see a list of what actual shapes we can place, what extra attri
 
 - **`rectangle`**: A basic rectangle primitive.
 
-  - **`size`**: Either a number or an array in the form `[num_x, num_y]`, representing the width/height of the rectangle(s) to place. If it's a single number `num`, it's interpreted as `[num, num]` (i.e., a square). Mandatory. Introduces `sx` and `sy` as units for width and height, respectively.
+  - **`size`**: Either a number or an array in the form `[num_x, num_y]`, representing the width/height of the rectangle(s) to place. If it's a single number `num`, it's interpreted as `[num, num]` (i.e., a square). Should always be specified &ndash; note that omitting it is not caught as an error, it just silently produces an empty 0x0 rectangle. Introduces `sx` and `sy` as units for width and height, respectively.
 
   - **`bevel`**: Optional beveling for the rectangles, default is `0`.
 
@@ -587,7 +598,9 @@ With this, let's see a list of what actual shapes we can place, what extra attri
       | `s_curve` | exactly 2 (start, end) | exactly 1 (end) |
       | `bezier` | 3 or 4 (start, control(s), end) | 2 or 3 |
 
-    - **`accuracy`**: optional, and only valid on `bezier` segments &ndash; controls how finely the curve is approximated.
+      Note that only the lower bounds are validated &ndash; passing more points than listed isn't caught as an error, but the extra points lead to undefined behavior.
+
+    - **`accuracy`**: optional, and only valid on `bezier` segments &ndash; accepted for compatibility, but currently ignored.
 
     :::note
     An `s_curve`'s two points must differ in *both* their X and Y coordinates, since the S is fitted into the bounding box spanning between them.
@@ -634,7 +647,7 @@ With this, let's see a list of what actual shapes we can place, what extra attri
 
 - **`hull`**: A [hull](https://en.wikipedia.org/wiki/Convex_hull) wrapped around a set of anchor points &ndash; great for generating an organic case outline that hugs a cluster of keys.
 
-  - **`points`**: Mandatory array of [anchors](./points.md#anchors) to wrap. Unlike `polygon`, the order of the points doesn't matter, since the hull is computed from the set as a whole.
+  - **`points`**: Mandatory array of [anchors](./points.md#anchors) to wrap. The hull itself is computed from the set as a whole, so unlike with `polygon`, the order of the points doesn't matter &ndash; as long as each anchor names a `ref`. (Ref-less anchors still chain from the previous point, exactly like `polygon`'s, in which case their order does affect where they land.)
 
   - **`extend`**: Optional boolean, default `true`. When `true`, each anchor contributes its *entire* key footprint (using the key's `width`/`height`, `18` by `18` by default) rather than just its center point, so the hull wraps around the keys instead of slicing through their centers. For keys larger than `18` on a side, extra points are added along the edges so the hull can't fold inward. Set it to `false` to hull the bare center points instead.
 

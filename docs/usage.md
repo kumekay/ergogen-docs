@@ -86,6 +86,7 @@ A build writes each output type into its own subfolder:
 
 ```text
 output/
+  source/     # (debug only) raw input + canonical (preprocessed) config
   points/     # (debug only) parsed points + demo visualization
   outlines/   # <name>.dxf always; <name>.svg with --svg or --debug
   cases/      # <name>.jscad
@@ -95,7 +96,7 @@ output/
 ### Troubleshooting
 
 - **Nothing / empty output** - did you pass the config filename? Is there a top-level `points:`?
-- **A change didn't apply** - add `--clean`; inspect the **canonical** config under `--debug` to see how your `$extends`/units/dot-notation expanded.
+- **A change didn't apply** - add `--clean`; inspect the **canonical** config (`output/source/canonical.yaml` under `--debug`) to see how your `$extends`/units/dot-notation expanded.
 - **Unexpected geometry** - open `output/points/demo.svg` (debug) to check point placement first.
 - **"does not name a valid outline"** - a part references an undefined (or `_private`, non-debug) outline name.
 
